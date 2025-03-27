@@ -111,8 +111,8 @@ TrimWhitespace proto
 		push rax
 		xor rdx, rdx
 		mov rax, rcx
-		mov rbx, 8
-		div rbx
+		mov r10, 8
+		div r10
 		mov rcx, rax
 		pop rax
 		mov qword ptr [rax], rcx
