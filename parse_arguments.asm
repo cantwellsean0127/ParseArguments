@@ -36,29 +36,27 @@ TrimWhitespace proto
 		mov rsi, rax
 		mov rdi, rsi
 		sub rdi, 1
-		mov rcx, 8
+		xor rcx, rcx
 		mov rdx, FALSE
 
 		character_loop:
 
 			inc rdi
-			cmp byte ptr [rdi], CHAR_SPACE
-			je found_space
-			cmp byte ptr [rdi], CHAR_DOUBLE_QUOTES
-			je found_double_quotes
+
 			cmp byte ptr [rdi], CHAR_NULLBYTE
 			je allocate_argument
-			jmp character_loop
 
-		found_space:
-
+			cmp byte ptr [rdi], CHAR_SPACE
+			jne check_if_double_quotes
 			cmp rdx, TRUE
 			je character_loop
 			jmp allocate_argument
-		
-		found_double_quotes:
-			not rdx
-			jmp character_loop
+			
+			check_if_double_quotes:
+				cmp byte ptr [rdi], CHAR_DOUBLE_QUOTES
+				jne character_loop
+				not rdx
+				jmp character_loop
 
 		allocate_argument:
 
@@ -79,20 +77,15 @@ TrimWhitespace proto
 			pop rcx
 
 			push rax
-			dec rax
-			dec rsi
-			copy_argument_string:
-				inc rax
-				inc rsi
-				cmp rsi, rdi
-				je end_copy_argument_string
-				xor r8, r8
-				mov r8b, byte ptr [rsi]
-				mov byte ptr [rax], r8b
-				jmp copy_argument_string
-			end_copy_argument_string:
-			mov byte ptr [rax], CHAR_NULLBYTE
+			push rcx
+			mov rcx, rdi
+			sub rcx, rsi
+			mov rdi, rax
+			rep movsb
+			mov rdi, rsi
 			inc rsi
+			pop rcx
+
 			add rcx, 8
 			cmp byte ptr [rdi], CHAR_NULLBYTE
 			jne character_loop
@@ -108,25 +101,9 @@ TrimWhitespace proto
 		add rsp, 32
 		pop rcx
 
-		push rax
-		xor rdx, rdx
-		mov rax, rcx
-		mov r10, 8
-		div r10
-		mov rcx, rax
-		pop rax
 		mov qword ptr [rax], rcx
-		sub qword ptr [rax], 1
-
-		push rax
-		mov rax, rcx
-		mov rdx, 8
-		mul rdx
-		mov rcx, rax
-		pop rax
 
 		add rcx, rax
-		sub rcx, 8
 		create_argument_pointers:
 			cmp rcx, rax
 			je end_create_argument_pointers
@@ -134,6 +111,15 @@ TrimWhitespace proto
 			sub rcx, 8
 			jmp create_argument_pointers
 		end_create_argument_pointers:
+
+		push rax
+		xor rdx, rdx
+		mov rax, qword ptr [rax]
+		mov r10, 8
+		div r10
+		mov rcx, rax
+		pop rax
+		mov qword ptr [rax], rcx
 
 		pop rdi
 		pop rsi
