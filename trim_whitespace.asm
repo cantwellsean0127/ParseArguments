@@ -47,12 +47,12 @@ VirtualAlloc proto
 		add rsp, 32
 
 		push rax
+		xor rdx, rdx
 		dec rax
 		dec rsi
 		copy_string:
 			inc rax
 			inc rsi
-			xor rdx, rdx
 			mov dl, byte ptr [rsi]
 			mov byte ptr [rax], dl
 			cmp rsi, rdi
